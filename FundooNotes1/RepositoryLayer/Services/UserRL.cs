@@ -1,11 +1,15 @@
 ﻿using CommonLayer;
 using Microsoft.Extensions.Configuration;
+using Microsoft.IdentityModel.Tokens;
 using RepositoryLayer.Entity;
 using RepositoryLayer.FundooNoteContext;
 using RepositoryLayer.Interfaces;
 
 using System;
 using System.Collections.Generic;
+using System.IdentityModel.Tokens.Jwt;
+using System.Linq;
+using System.Security.Claims;
 using System.Text;
 
 namespace RepositoryLayer.UserClass
@@ -39,6 +43,47 @@ namespace RepositoryLayer.UserClass
             {
                 throw ex;
             }
+        }
+        public string LoginUser(string email, string password)
+        {
+            try
+            {
+                var result = fundoo.Users.Where(u => u.Email == email && u.Password == password).FirstOrDefault();
+                if (result == null)
+                {
+                    return null;
+                }
+
+                return GetJWTToken(email, result.UserID);
+                //string password = password;
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+        }
+
+        // Generate JwT token
+        private static string GetJWTToken(string email, int UserID)
+        {
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var tokenKey = Encoding.ASCII.GetBytes("THIS_IS_MY_KEY_TO_GENERATE_TOKEN");
+            var tokenDescriptor = new SecurityTokenDescriptor
+            {
+                Subject = new ClaimsIdentity(new Claim[]
+                {
+                    new Claim("email", email),
+                    new Claim("userId",UserID.ToString())
+                }),
+                Expires = DateTime.UtcNow.AddHours(1),
+                SigningCredentials =
+                new SigningCredentials(
+                    new SymmetricSecurityKey(tokenKey),
+                    SecurityAlgorithms.HmacSha256Signature)
+            };
+            var token = tokenHandler.CreateToken(tokenDescriptor);
+            return tokenHandler.WriteToken(token);
+
         }
     }
 }
