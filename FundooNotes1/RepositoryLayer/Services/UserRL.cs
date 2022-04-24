@@ -32,7 +32,7 @@ namespace RepositoryLayer.UserClass
                 user1.FirstName = user.FirstName;
                 user1.LastName = user.LastName;
                 user1.Email = user.Email;
-                user1.Password = user.Password;
+                user1.Password = EncryptPassword(user.Password);
                 user1.RegisterDate = DateTime.Now;
                 user1.Address = user.Address;
                 fundoo.Users.Add(user1);
@@ -84,6 +84,53 @@ namespace RepositoryLayer.UserClass
             var token = tokenHandler.CreateToken(tokenDescriptor);
             return tokenHandler.WriteToken(token);
 
+        }
+
+        // Encryption of the Password
+        public static string EncryptPassword(string password)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(password))
+                {
+                    return null;
+                }
+                else
+                {
+                    byte[] b = Encoding.ASCII.GetBytes(password);
+                    string encrypted = Convert.ToBase64String(b);
+                    return encrypted;
+                }
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+        }
+
+        // Decryption of the password
+        public static string DecryptedPassword(string encryptedPassword)
+        {
+            byte[] b;
+            string decrypted;
+            try
+            {
+                if (string.IsNullOrEmpty(encryptedPassword))
+                {
+                    return null;
+                }
+                else
+                {
+                    b = Convert.FromBase64String(encryptedPassword);
+                    decrypted = Encoding.ASCII.GetString(b);
+                    return decrypted;
+                }
+            }
+            catch (Exception ex)
+            {
+
+                throw ex;
+            }
         }
     }
 }
